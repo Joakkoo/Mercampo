@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  usuario
+  empresa
+}
+
+enum ProductStatus {
+  activo
+  inactivo
+}
+
+enum OrderStatus {
+  pendiente
+  pagado
+  enviado
+  cancelado
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  role         UserRole
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  createdById  Int?
+  updatedById  Int?
+  createdBy    User?     @relation("UserCreatedUsers", fields: [createdById], references: [id])
+  updatedBy    User?     @relation("UserUpdatedUsers", fields: [updatedById], references: [id])
+
+  companies      UserCompany[]
+  createdUsers   User[]   @relation("UserCreatedUsers")
+  updatedUsers   User[]   @relation("UserUpdatedUsers")
+  createdCompanies Company[] @relation("UserCreatedCompanies")
+  updatedCompanies Company[] @relation("UserUpdatedCompanies")
+  products        Product[]
+  carts           Cart[]
+  orders          Order[]
+  reviews         Review[]
+  messagesSent    Message[] @relation("SentMessages")
+  messagesReceived Message[] @relation("ReceivedMessages")
+  jwtTokens       JwtToken[]
+
+  categoriesCreated   Category[]          @relation("CategoryCreatedBy")
+  categoriesUpdated   Category[]          @relation("CategoryUpdatedBy")
+  productsCreated     Product[]           @relation("ProductCreatedBy")
+  productsUpdated     Product[]           @relation("ProductUpdatedBy")
+  ordersCreated       Order[]             @relation("OrderCreatedBy")
+  ordersUpdated       Order[]             @relation("OrderUpdatedBy")
+}
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User? @relation("UserCreatedCompanies", fields: [createdById], references: [id])
+  updatedBy   User? @relation("UserUpdatedCompanies", fields: [updatedById], references: [id])
+
+  users       UserCompany[]
+}
+
+model UserCompany {
+  userId         Int
+  companyId      Int
+  roleInCompany  String?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, companyId])
+}
+
+model JwtToken {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  refreshTokenHash String
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  parentId    Int?
+  parent      Category? @relation("Subcategories", fields: [parentId], references: [id])
+  children    Category[] @relation("Subcategories")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User? @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User? @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
+
+  products    Product[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  title       String
+  description String?
+  price       Float
+  quantity    Int
+  status      ProductStatus @default(activo)
+  categoryId  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  createdById Int?
+  updatedById Int?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdBy   User?     @relation("ProductCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("ProductUpdatedBy", fields: [updatedById], references: [id])
+
+  images      ProductImage[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  reviews     Review[]
+  messages    Message[]
+}
+
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  url       String
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  cartId     Int
+  productId  Int
+  quantity   Int
+  createdAt  DateTime @default(now())
+
+  cart       Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([cartId, productId])
+}
+
+model Order {
+  id           Int      @id @default(autoincrement())
+  userId       Int?
+  orderNumber  String   @unique
+  total        Float
+  status       OrderStatus @default(pendiente)
+  paymentInfo  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  createdById  Int?
+  updatedById  Int?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdBy    User?    @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  updatedBy    User?    @relation("OrderUpdatedBy", fields: [updatedById], references: [id])
+
+  items        OrderItem[]
+  messages     Message[]
+}
+
+model OrderItem {
+  orderId    Int
+  productId  Int
+  quantity   Int
+  unitPrice  Float
+
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([orderId, productId])
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  senderId    Int?
+  receiverId  Int?
+  productId   Int?
+  orderId     Int?
+  threadId    Int?
+  content     String
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?
+
+  sender      User?    @relation("SentMessages", fields: [senderId], references: [id], onDelete: SetNull)
+  receiver    User?    @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: SetNull)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order       Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  productId  Int?
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  deletedAt  DateTime?
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
