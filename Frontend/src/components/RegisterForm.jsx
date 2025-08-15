@@ -1,6 +1,6 @@
 import { useState } from "react";
 import SubmitButton from "./SubmitButton";
-import Title from "./Tittle";
+import Title from "./Title";
 import Logo from "../assets/Logo.png"
 import useNotification from "../hooks/useNotification";
 
