@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+//Función para crear producto
 exports.createProduct = async (data, userId) => {
     if (!data) throw new Error("No se enviaron datos para crear el producto");
 
@@ -23,6 +24,7 @@ exports.createProduct = async (data, userId) => {
           });
 };
 
+//Función para obtener todos los productos
 exports.getAllProducts = async () => {
     return await prisma.product.findMany({
         where: { deletedAt: null, status: "activo" },
