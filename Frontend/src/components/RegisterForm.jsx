@@ -78,7 +78,7 @@ export default function RegisterForm({ title, onSubmit, buttonText }) {
   };
 
   return (
-    <form className="flex flex-col gap-4 max-w-md w-full p-5 bg-white backdrop-blur-sm rounded-lg shadow-xl" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-4 max-w-md w-full p-5 bg-background backdrop-blur-sm rounded-lg shadow-xl" onSubmit={handleSubmit}>
         {/* Logo */}
         <div className="flex justify-center">
           <img 
@@ -92,7 +92,7 @@ export default function RegisterForm({ title, onSubmit, buttonText }) {
         <Title>Mercampo</Title>
         
         {/* Subtítulo */}
-        <h2 className="text-center text-gray-600 text-md">{title}</h2>
+        <h2 className="text-center text-white text-md">{title}</h2>
 
       <input
         className="border border-gray-300 rounded-md p-2"
@@ -173,7 +173,7 @@ export default function RegisterForm({ title, onSubmit, buttonText }) {
       />
 
 
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-white">
         Al registrarte, aceptas nuestros <a href="/terms" className="text-blue-500">Términos y Condiciones</a> y nuestra <a href="/privacy" className="text-blue-500">Política de Privacidad</a>.
       </p>
 

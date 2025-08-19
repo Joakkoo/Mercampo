@@ -29,17 +29,17 @@ export default function RegisterForm({ title, onSubmit, buttonText }) {
 
   return (
     <form
-      className="flex flex-col gap-5 max-w-md w-full p-20 bg-white rounded-lg shadow-xl"
+      className="flex flex-col gap-5 max-w-md w-full p-20 bg-background rounded-lg shadow-xl"
       onSubmit={handleSubmit}
     >
       {/* Logo */}
       <div className="flex justify-center">
-        <img src={Logo} alt="Mercampo Logo" className="w-20 h-20 object-contain" />
+        <img src={Logo} alt="Mercampo Logo" className="w-20 h-20 object-contain drop-shadow-lg" />
       </div>
 
       {/* Título */}
       <Title>Mercampo</Title>
-      <h2 className="text-center text-gray-600 text-md">{title}</h2>
+      <h2 className="text-center text-white text-md">{title}</h2>
 
       <input
         className="border border-gray-300 rounded-md p-2"
