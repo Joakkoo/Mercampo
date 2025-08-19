@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/auth.controller.js';
+import { registerUser, loginUser, logoutUser } from '../controllers/auth.controller.js';
 
 const router = express.Router();
 
@@ -7,5 +7,7 @@ const router = express.Router();
 router.post('/register', registerUser);
 // Ruta para iniciar sesión
 router.post('/login', loginUser);
+// Ruta para cerrar sesión
+router.post("/logout", logoutUser);
 
 export default router;
