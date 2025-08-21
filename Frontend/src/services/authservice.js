@@ -12,13 +12,6 @@ export const loginUser = async (data) => {
   return res.data;
 }
 
-export const logoutUser = async (token) => {
-  const res = await axios.post(`${API_URL}/logout`,
-     {}, { 
-      headers: {
-    Authorization: `Bearer ${token}`,
-  },
-  }
-);
-  return res.data;
+export const logoutUser = async () => {
+  localStorage.removeItem("token");
 };

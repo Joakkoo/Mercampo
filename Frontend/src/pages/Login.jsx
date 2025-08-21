@@ -1,15 +1,18 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 import useNotification from "../hooks/useNotification";
 import NotificationContainer from "../components/NotificationContainer";
 
-import { loginUser } from "../services/authservice"
+import { loginUser } from "../services/authService";
 
 
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showSuccess, showError, notifications, removeNotification } = useNotification();
+
+  const from = location.state?.from?.pathname || "/";
 
   const handleLogin = async (formData) => {
     try {
@@ -22,7 +25,7 @@ export default function Login() {
       }
       
       setTimeout(() => {
-        navigate("/")
+        navigate(from, { replace: true });
       }, 1500)
     } catch (error) {
       console.error("Error al iniciar sesión:", error);

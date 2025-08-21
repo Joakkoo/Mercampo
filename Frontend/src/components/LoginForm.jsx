@@ -3,6 +3,7 @@ import SubmitButton from "./SubmitButton";
 import Title from "./Title";
 import Logo from "../assets/Logo.png"
 import useNotification from "../hooks/useNotification";
+import { Link } from "react-router-dom";
 
 export default function RegisterForm({ title, onSubmit, buttonText }) {
   const [formData, setFormData] = useState({
@@ -29,7 +30,7 @@ export default function RegisterForm({ title, onSubmit, buttonText }) {
 
   return (
     <form
-      className="flex flex-col gap-5 max-w-md w-full p-20 bg-background rounded-lg shadow-xl"
+      className="flex flex-col gap-5 max-w-md w-full p-10 bg-background rounded-lg shadow-xl"
       onSubmit={handleSubmit}
     >
       {/* Logo */}
@@ -64,6 +65,13 @@ export default function RegisterForm({ title, onSubmit, buttonText }) {
       <SubmitButton type="submit">
         {buttonText}
       </SubmitButton>
+
+      <p className="text-gray-300 text-sm text-center">
+        ¿No tienes una cuenta?{" "}
+        <Link to="/register" className="text-secondary hover:underline">
+          Regístrate
+        </Link>
+      </p>
     </form>
   );
 }
