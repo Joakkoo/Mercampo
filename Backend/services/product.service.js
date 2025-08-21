@@ -35,3 +35,39 @@ exports.getAllProducts = async () => {
     });
 };
 
+//Función para obtener un producto por ID
+// ...código existente...
+exports.createProduct = async (data, userId) => {
+    if (!data) throw new Error("No se enviaron datos para crear el producto");
+
+    const {
+        title, description, price, quantity, categoryId, images,
+        finalidad, condicion, marca, modelo, anio, moneda, localidad, whatsapp,
+        extraData // objeto con campos técnicos variables
+    } = data;
+
+    return await prisma.product.create({
+        data: {
+            title,
+            description,
+            price: parseFloat(price),
+            quantity: parseInt(quantity),
+            user: { connect: { id: userId } },
+            createdBy: { connect: { id: userId } },
+            category: categoryId ? { connect: { id: Number(categoryId) } } : undefined,
+            finalidad,
+            condicion,
+            marca,
+            modelo,
+            anio: anio ? parseInt(anio) : null,
+            moneda,
+            localidad,
+            whatsapp,
+            extraData: extraData ? extraData : undefined,
+            images: {
+                create: images?.map(url => ({ url })) || []
+            }
+        },
+        include: { images: true }
+    });
+};

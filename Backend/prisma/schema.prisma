@@ -123,9 +123,18 @@ model Product {
   quantity    Int
   status      ProductStatus @default(activo)
   categoryId  Int?
+  finalidad   String?   // Venta, Compra, Alquilo
+  condicion   String?   // Nuevo, Usado
+  marca       String?
+  modelo      String?
+  anio        Int?
+  moneda      String?   // ARS, USD
+  localidad   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
+
+  extraData   Json?
 
   createdById Int?
   updatedById Int?

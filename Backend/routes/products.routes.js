@@ -6,7 +6,10 @@ const productController = require("../controllers/product.controller");
 // Crear producto (requiere estar logueado)
 router.post("/", authMiddleware, productController.createProduct);
 
-// (opcional) listar productos
+// Obtener todos los productos
 router.get("/", productController.getAllProducts);
+
+// Obtener producto por ID
+router.get("/:id", productController.getProductById);
 
 module.exports = router;

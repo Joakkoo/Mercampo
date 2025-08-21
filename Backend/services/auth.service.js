@@ -38,11 +38,3 @@ exports.loginUser = async ({ email, password }) => {
 
     return { user: { id: user.id, email: user.email, role: user.role }, token };
 }
-
-// Función para cerrar sesión
-exports.logoutUser = async (userId) => {
-    await prisma.jwtToken.deleteMany({
-        where: { userId }
-    });
-    return { message: "Sesión cerrada correctamente "};
-};
