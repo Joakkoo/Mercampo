@@ -95,6 +95,22 @@ model JwtToken {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+enum Moneda {
+  ARS
+  USD
+}
+
+enum Finalidad {
+  Venta
+  Compra
+  Alquilo
+}
+
+enum Condicion {
+  Nuevo
+  Usado
+}
+
 model Category {
   id          Int      @id @default(autoincrement())
   name        String
@@ -123,12 +139,12 @@ model Product {
   quantity    Int
   status      ProductStatus @default(activo)
   categoryId  Int?
-  finalidad   String?   // Venta, Compra, Alquilo
-  condicion   String?   // Nuevo, Usado
+  finalidad   Finalidad?
+  condicion   Condicion?
   marca       String?
   modelo      String?
   anio        Int?
-  moneda      String?   // ARS, USD
+  moneda      Moneda?
   localidad   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

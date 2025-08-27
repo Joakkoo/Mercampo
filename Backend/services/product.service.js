@@ -1,5 +1,13 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, Moneda, Finalidad, Condicion } = require('@prisma/client');
 const prisma = new PrismaClient();
+
+
+exports.getEnums = async () => {
+    const monedas = Object.values(Moneda);
+    const finalidades = Object.values(Finalidad);
+    const condiciones = Object.values(Condicion);
+    return { monedas, finalidades, condiciones };
+};
 
 //Función para crear producto
 exports.createProduct = async (data, userId) => {
@@ -68,6 +76,15 @@ exports.createProduct = async (data, userId) => {
                 create: images?.map(url => ({ url })) || []
             }
         },
+        include: { images: true }
+    });
+};
+
+exports.getProductById = async (id) => {
+    if (!id) throw new Error("No se proporcionó un ID de producto");
+
+    return await prisma.product.findUnique({
+        where: { id: Number(id) },
         include: { images: true }
     });
 };

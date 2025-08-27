@@ -1,5 +1,15 @@
 const productService = require("../services/product.service");
 
+
+exports.getEnums = async (req, res) => {
+    try {
+        const enums = await productService.getEnums();
+        res.json(enums);
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener enums", error: error.message });
+    }
+};
+
 exports.createProduct = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -23,17 +33,14 @@ exports.getAllProducts = async (req, res) => {
 };
 
 exports.getProductById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const product = await productService.getProductById(id);
-        res.json(product);
-
-        if (!product) {
-            return res.status(404).json({ message: "Producto no encontrado" });
-        }
-
-        res.json(product);
-    } catch (error) {
-        res.status(500).json({ message: "Error al obtener producto", error: error.message });
+  try {
+    const product = await productService.getProductById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Producto no encontrado" });
     }
+    res.json(product);
+  } catch (error) {
+    console.error("Error al obtener producto:", error);
+    res.status(500).json({ message: "Error al obtener producto" });
+  }
 };
