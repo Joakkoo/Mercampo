@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import StepIndicator from "../components/StepIndicator";
 import { getCategories } from "../services/categoriesService";
 import { createProduct } from "../services/productService";
+import Select from "react-select";
+import Notification from "../components/Notification";
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -11,6 +13,12 @@ export default function Publish() {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [extraData, setExtraData] = useState({});
+  const [enumOptions, setEnumOptions] = useState({
+    finalidad: [],
+    condicion: [],
+    moneda: [],
+  });
+  const [notification, setNotification] = useState(null);
 
   const [formData, setFormData] = useState({
     categoryId: "",
@@ -33,14 +41,16 @@ export default function Publish() {
 
   const camposTecnicosPorSubcategoria = {
     "5": [
-      { name: "cultivo", label: "Cultivo/Uso", type: "text" },
-      { name: "distancia_surcos", label: "Distancia entre surcos (cm)", type: "number" },
-      { name: "ancho_trabajo", label: "Ancho de trabajo (m)", type: "number" },
-      { name: "cantidad_tolvas", label: "Cantidad de tolvas", type: "number" },
-      { name: "caracteristicas_chasis", label: "Características del chasis", type: "text" },
-      { name: "sistema_labranza", label: "Sistema de labranza", type: "text" },
-      { name: "sistema_siembra", label: "Sistema de siembra", type: "text" },
-      { name: "cantidad_surcos", label: "Cantidad de surcos", type: "number" },
+      { name: "linea", label: "Línea", type: "text" },
+      { name: "potencia_hp", label: "Potencia (HP)", type: "number" },
+      { name: "traccion", label: "Tracción", type: "select", options: ["Simple", "Doble"] },
+      { name: "direccion", label: "Dirección", type: "select", options: ["Hidráulica", "Mecánica", "Asistida", "Electrica"] },
+      { name: "tipo_motor", label: "Tipo de motor", type: "select", options: ["Eléctrico", "Diésel", "Gas", "Nafta"] },
+      { name: "levante_tres_puntos", label: "Levante tres puntos", type: "select", options: ["Sí", "No"] },
+      { name: "cabina", label: "Cabina", type: "select", options: ["Sí", "No"] },
+      { name: "variante_traccion", label: "Variante de tracción", type: "select", options: ["Articulado", "Rígido"] },
+      { name: "tipo_rodado", label: "Tipo de rodado", type: "select", options: ["Oruga", "Neumático"] },
+      { name: "tipo_tractor", label: "Tipo de tractor", type: "select", options: ["Autónomo", "Forestal", "Viñatero"] }
     ],
   };
 
@@ -64,7 +74,7 @@ export default function Publish() {
     try {
       const data = await getCategories();
       setCategories(data);
-      // console.log("Categorías cargadas:", data);
+      console.log("Categorías cargadas:", data);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -72,6 +82,24 @@ export default function Publish() {
 
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  const fetchEnums = async () => {
+    try {
+      const response = await fetch(`${API_URL}/products/enums`);
+      const data = await response.json();
+      setEnumOptions({
+        finalidad: data.finalidad || data.finalidades || [],
+        condicion: data.condicion || data.condiciones || [],
+        moneda: data.moneda || data.monedas || [],
+      });
+    } catch (error) {
+      console.error("Error fetching enums:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnums();
   }, []);
 
   // Manejo de inputs
@@ -104,29 +132,32 @@ export default function Publish() {
     setFormData({ ...formData, images: [...formData.images, ""] });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
 
-    try {
-      const token = localStorage.getItem("token");
-      // Incluye extraData solo si corresponde
-      const dataToSend = {
-        ...formData,
-        extraData: Object.keys(extraData).length > 0 ? extraData : undefined,
-      };
-      const data = await createProduct(dataToSend, token);
-      setMessage("✅ Producto publicado correctamente");
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Error al publicar producto");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  try {
+    const token = localStorage.getItem("token");
+    const dataToSend = {
+      ...formData,
+      extraData: Object.keys(extraData).length > 0 ? extraData : undefined,
+    };
+    const data = await createProduct(dataToSend, token);
+    setNotification({
+      message: "✅ Producto publicado correctamente",
+      type: "success",
+    });
+  } catch (error) {
+    setNotification({
+      message: "❌ Error al publicar producto",
+      type: "error",
+    });
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
   // Calcula el índice de contenido según los pasos dinámicos
   function getStepContentIndex() {
     // Si hay datos técnicos, los pasos coinciden con el número
@@ -142,11 +173,48 @@ export default function Publish() {
 
   const stepContentIndex = getStepContentIndex();
 
+  // Opciones para categorías principales (solo parentId === null)
+  const categoryOptions = categories
+    .filter(cat => cat.parentId === null)
+    .map(cat => ({
+      value: cat.id,
+      label: cat.name,
+    }));
+
+  // Opciones para subcategorías
+  const subcategoryOptions = subcategories.map(subcat => ({
+    value: subcat.id,
+    label: subcat.name,
+  }));
+
+  const finalidadOptions = enumOptions.finalidad.map(item => ({
+    value: item,
+    label: item,
+  }));
+
+  const condicionOptions = enumOptions.condicion.map(item => ({
+    value: item,
+    label: item,
+  }));
+
+  const monedaOptions = enumOptions.moneda.map(item => ({
+    value: item,
+    label: item,
+  }));
+
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {notification && (
+  <Notification
+    message={notification.message}
+    type={notification.type}
+    onClose={() => setNotification(null)}
+  />
+)}
       {/* Encabezado */}
       <Header />
-      <div className="flex justify-center mt-10">
+      <div className="flex justify-center mt-4">
         <div className="w-full max-w-lg bg-white shadow-lg rounded-2xl p-5">
           <h1 className="text-4xl text-green-900 font-light mb-6 text-center py-4 drop-shadow-lg">Publicar Producto</h1>
 
@@ -167,37 +235,42 @@ export default function Publish() {
                   className="space-y-4"
                 >
                   <h3 className="text-lg font-light">1. Selecciona categoría</h3>
-                  <select
+                  <Select
                     name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">-- Selecciona una categoría --</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={categoryOptions}
+                    value={categoryOptions.find(opt => opt.value === Number(formData.categoryId))}
+                    onChange={option => {
+                      setFormData(prev => ({
+                        ...prev,
+                        categoryId: option ? option.value : "",
+                        subcategoryId: "", // Limpiar subcategoría al cambiar categoría
+                      }));
+                      const selectedCat = categories.find(cat => cat.id === (option ? option.value : null));
+                      setSubcategories(selectedCat?.children || []);
+                    }}
+                    placeholder="-- Selecciona una categoría --"
+                    menuPlacement="auto"
+                    isClearable
+                    className="mb-2"
+                  />
 
-                  {/* Mostrar subcategorías si existen */}
+                  {/** Subcategoría */}
                   {subcategories.length > 0 && (
-                    <select
+                    <Select
                       name="subcategoryId"
-                      value={formData.subcategoryId}
-                      onChange={handleChange}
-                      required
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="">-- Selecciona una subcategoría --</option>
-                      {subcategories.map((subcat) => (
-                        <option key={subcat.id} value={subcat.id}>
-                          {subcat.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={subcategoryOptions}
+                      value={subcategoryOptions.find(opt => opt.value === Number(formData.subcategoryId))}
+                      onChange={option =>
+                        setFormData(prev => ({
+                          ...prev,
+                          subcategoryId: option ? option.value : "",
+                        }))
+                      }
+                      placeholder="-- Selecciona una subcategoría --"
+                      menuPlacement="auto"
+                      isClearable
+                      className="mb-2"
+                    />
                   )}
                 </motion.div>
               )}
@@ -229,6 +302,21 @@ export default function Publish() {
                     onChange={handleChange}
                     required
                     className="w-full p-2 border rounded-md mb-2"
+                  />                  
+                  <Select
+                    name="moneda"
+                    options={monedaOptions}
+                    value={monedaOptions.find(opt => opt.value === formData.moneda)}
+                    onChange={option =>
+                      setFormData(prev => ({
+                        ...prev,
+                        moneda: option ? option.value : "",
+                      }))
+                    }
+                    placeholder="Moneda"
+                    menuPlacement="auto"
+                    isClearable
+                    className="mb-2"
                   />
                   <input
                     type="number"
@@ -239,29 +327,36 @@ export default function Publish() {
                     required
                     className="w-full p-2 border rounded-md mb-2"
                   />
-                  <select
+                  <Select
                     name="finalidad"
-                    value={formData.finalidad}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border rounded-md mb-2"
-                  >
-                    <option value="">Finalidad</option>
-                    <option value="Venta">Venta</option>
-                    <option value="Compra">Compra</option>
-                    <option value="Alquilo">Alquilo</option>
-                  </select>
-                  <select
+                    options={finalidadOptions}
+                    value={finalidadOptions.find(opt => opt.value === formData.finalidad)}
+                    onChange={option =>
+                      setFormData(prev => ({
+                        ...prev,
+                        finalidad: option ? option.value : "",
+                      }))
+                    }
+                    placeholder="Finalidad"
+                    menuPlacement="auto"
+                    isClearable
+                    className="mb-2"
+                  />
+                  <Select
                     name="condicion"
-                    value={formData.condicion}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border rounded-md mb-2"
-                  >
-                    <option value="">Condición</option>
-                    <option value="Nuevo">Nuevo</option>
-                    <option value="Usado">Usado</option>
-                  </select>
+                    options={condicionOptions}
+                    value={condicionOptions.find(opt => opt.value === formData.condicion)}
+                    onChange={option =>
+                      setFormData(prev => ({
+                        ...prev,
+                        condicion: option ? option.value : "",
+                      }))
+                    }
+                    placeholder="Condición"
+                    menuPlacement="auto"
+                    isClearable
+                    className="mb-2"
+                  />
                   <input
                     type="text"
                     name="marca"
@@ -289,17 +384,7 @@ export default function Publish() {
                     required
                     className="w-full p-2 border rounded-md mb-2"
                   />
-                  <select
-                    name="moneda"
-                    value={formData.moneda}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border rounded-md mb-2"
-                  >
-                    <option value="">Moneda</option>
-                    <option value="ARS">Pesos</option>
-                    <option value="USD">Dólares</option>
-                  </select>
+
                   <input
                     type="text"
                     name="localidad"
@@ -322,17 +407,41 @@ export default function Publish() {
                   className="space-y-4"
                 >
                   <h3 className="text-lg font-light">3. Datos técnicos</h3>
-                  {camposTecnicosPorSubcategoria[formData.subcategoryId].map(campo => (
-                    <input
-                      key={campo.name}
-                      type={campo.type}
-                      name={campo.name}
-                      placeholder={campo.label}
-                      value={extraData[campo.name] || ""}
-                      onChange={handleExtraDataChange}
-                      className="w-full p-2 border rounded-md mb-2"
-                    />
-                  ))}
+                  {camposTecnicosPorSubcategoria[formData.subcategoryId].map(campo => {
+                    if (campo.type === "select") {
+                      const selectOptions = campo.options.map(opt => ({ value: opt, label: opt }));
+                      return (
+                        <Select
+                          key={campo.name}
+                          name={campo.name}
+                          options={selectOptions}
+                          value={selectOptions.find(opt => opt.value === extraData[campo.name])}
+                          onChange={option =>
+                            setExtraData(prev => ({
+                              ...prev,
+                              [campo.name]: option ? option.value : "",
+                            }))
+                          }
+                          placeholder={campo.label}
+                          menuPlacement="auto"
+                          isClearable
+                          className="mb-2"
+                        />
+                      );
+                    }
+                    // Default: input
+                    return (
+                      <input
+                        key={campo.name}
+                        type={campo.type}
+                        name={campo.name}
+                        placeholder={campo.label}
+                        value={extraData[campo.name] || ""}
+                        onChange={handleExtraDataChange}
+                        className="w-full p-2 border rounded-md mb-2"
+                      />
+                    );
+                  })}
                 </motion.div>
               )}
 

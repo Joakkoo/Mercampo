@@ -41,7 +41,7 @@ export default function Header() {
             className="text-2xl font-bold drop-shadow-lg cursor-pointer"
             onClick={() => navigate("/")}
           >
-            Mer<span className="text-yellow-500">campo</span>
+            Rural<span className="text-yellow-500">ket</span>
           </h1>
         </div>
 
