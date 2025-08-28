@@ -39,6 +39,7 @@ exports.getAllProducts = async () => {
         include: {
             category: true,
             user: { select: { id: true, email: true } },
+            images: true
         },
     });
 };
