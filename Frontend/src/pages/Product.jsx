@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import Header from "../components/Header";
 import { getProductById } from "../services/productService";
 import { MessageCircle, Phone } from "lucide-react";
