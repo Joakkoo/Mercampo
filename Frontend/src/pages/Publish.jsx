@@ -3,9 +3,12 @@ import Header from "../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import StepIndicator from "../components/StepIndicator";
 import { getCategories } from "../services/categoriesService";
+import { getCrops } from "../services/cropsService";
 import { createProduct } from "../services/productService";
 import Select from "react-select";
 import Notification from "../components/Notification";
+import { useNavigate } from "react-router-dom";
+import AIAssistant from "../components/AIAssistant";
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -19,7 +22,7 @@ export default function Publish() {
     moneda: [],
   });
   const [notification, setNotification] = useState(null);
-
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     categoryId: "",
     subcategoryId: "",
@@ -37,7 +40,9 @@ export default function Publish() {
     localidad: "",
   });
 
-  const subcategoriasTecnicas = [5]; // IDs de subcategorías técnicas
+  const subcategoriasTecnicas = [5, 6, 7]; // IDs de subcategorías técnicas
+
+  const [cropsOptions, setCropsOptions] = useState([]);
 
   const camposTecnicosPorSubcategoria = {
     "5": [
@@ -52,6 +57,23 @@ export default function Publish() {
       { name: "tipo_rodado", label: "Tipo de rodado", type: "select", options: ["Oruga", "Neumático"] },
       { name: "tipo_tractor", label: "Tipo de tractor", type: "select", options: ["Autónomo", "Forestal", "Viñatero"] }
     ],
+    "6": [
+      { name: "potencia_hp", label: "Potencia (HP)", type: "number" },
+      { name: "cultivo_uso", label: "Cultivo/Uso", type: "select", options: [cropsOptions] },
+      { name: "tipo_plataforma", label: "Tipo de plataforma incluida", type: "select", options: ["No incluida", "Algodonera", "Manicera", "Sojera", "Maicera", "Girasolera", "Flexible"] },
+      { name: "sistema_cosecha", label: "Sistema de cosecha", type: "select", options: ["Axial", "Convencional", "Mixto"] },
+      { name: "ancho_labor", label: "Ancho de labor", type: "number" },
+      { name: "capacidad_tolva", label: "Capacidad de la tolva (L)", type: "number" },
+    ],
+    "7": [
+      { name: "cultivo_uso", label: "Cultivo/Uso", type: "select", options: [cropsOptions] },
+      { name: "ancho_trabajo", label: "Ancho de trabajo (m)", type: "number" },
+      { name: "cantidad_tolvas", label: "Cantidad de tolvas", type: "number" },
+      { name: "cantidad_surcos", label: "Cantidad de surcos", type: "number" },
+      { name: "distancia_surcos", label: "Distancia entre surcos (cm)", type: "number" },
+      { name: "sistema_labranza", label: "Sistema de labranza", type: "select", options: ["Convencional", "Directa"] },
+      { name: "sistema_siembra", label: "Sistema de siembra", type: "select", options: ["Chorrillo", "Voleo", "Mecánica", "Neumática"] },
+    ]
   };
 
   // Construye los pasos dinámicamente
@@ -69,6 +91,9 @@ export default function Publish() {
   // Estado auxiliar
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  
+  // Estado del asistente de IA
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -100,6 +125,20 @@ export default function Publish() {
 
   useEffect(() => {
     fetchEnums();
+  }, []);
+
+  // Cargar cultivos desde backend
+  useEffect(() => {
+    (async () => {
+      try {
+        const crops = await getCrops();
+        setCropsOptions(
+          crops.map(c => ({ value: c.slug, label: `${c.name} ${c.group ? `(${c.group})` : ''}`.trim() }))
+        );
+      } catch (e) {
+        console.error('Error cargando cultivos', e);
+      }
+    })();
   }, []);
 
   // Manejo de inputs
@@ -138,7 +177,7 @@ const handleSubmit = async (e) => {
   setMessage("");
 
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
     const dataToSend = {
       ...formData,
       extraData: Object.keys(extraData).length > 0 ? extraData : undefined,
@@ -148,6 +187,9 @@ const handleSubmit = async (e) => {
       message: "✅ Producto publicado correctamente",
       type: "success",
     });
+    setTimeout(() => {
+      navigate(`/product/${data.id}`);
+    }, 3000);
   } catch (error) {
     setNotification({
       message: "❌ Error al publicar producto",
@@ -157,6 +199,34 @@ const handleSubmit = async (e) => {
   } finally {
     setLoading(false);
   }
+};
+
+// Función para manejar el resultado del asistente de IA
+const handleAIAnalysisComplete = (analysisResult) => {
+  // Actualizar el formulario con la información del asistente
+  setFormData(prev => ({
+    ...prev,
+    title: analysisResult.titulo_sugerido || prev.title,
+    description: analysisResult.descripcion_sugerida || prev.description,
+    marca: analysisResult.marca || prev.marca,
+    modelo: analysisResult.modelo || prev.modelo,
+    anio: analysisResult.anio_estimado || prev.anio,
+  }));
+
+  // Si hay datos técnicos, actualizarlos
+  if (analysisResult.datos_tecnicos && Object.keys(analysisResult.datos_tecnicos).length > 0) {
+    setExtraData(analysisResult.datos_tecnicos);
+  }
+  console.log(analysisResult.datos_tecnicos);
+
+  // Cerrar el asistente
+  setShowAIAssistant(false);
+
+  // Mostrar notificación de éxito
+  setNotification({
+    message: "✨ Información del producto completada automáticamente",
+    type: "success",
+  });
 };
   // Calcula el índice de contenido según los pasos dinámicos
   function getStepContentIndex() {
@@ -271,6 +341,37 @@ const handleSubmit = async (e) => {
                       isClearable
                       className="mb-2"
                     />
+                  )}
+
+                  {/* Botón del Asistente de IA */}
+                  {formData.subcategoryId && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                          </div>
+                          <h4 className="text-lg font-medium text-blue-900">
+                            Asistente Inteligente
+                          </h4>
+                        </div>
+                        <p className="text-sm text-blue-700 mb-4">
+                          ¿Tienes una foto de tu producto? Nuestro asistente puede ayudarte a completar automáticamente la información
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowAIAssistant(true)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Usar Asistente de IA
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </motion.div>
               )}
@@ -409,7 +510,9 @@ const handleSubmit = async (e) => {
                   <h3 className="text-lg font-light">3. Datos técnicos</h3>
                   {camposTecnicosPorSubcategoria[formData.subcategoryId].map(campo => {
                     if (campo.type === "select") {
-                      const selectOptions = campo.options.map(opt => ({ value: opt, label: opt }));
+                      const selectOptions = campo.name === 'cultivo_uso'
+                        ? cropsOptions
+                        : campo.options.map(opt => ({ value: opt, label: opt }));
                       return (
                         <Select
                           key={campo.name}
@@ -530,6 +633,16 @@ const handleSubmit = async (e) => {
           </form>
         </div>
       </div>
+
+      {/* Modal del Asistente de IA */}
+      <AnimatePresence>
+        {showAIAssistant && (
+          <AIAssistant
+            onAnalysisComplete={handleAIAnalysisComplete}
+            onClose={() => setShowAIAssistant(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

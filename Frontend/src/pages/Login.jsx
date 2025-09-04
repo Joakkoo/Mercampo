@@ -21,11 +21,7 @@ export default function Login() {
       showSuccess("¡Inicio de sesión exitoso! 🎉 Bienvenido a Mercampo");
 
       if (response.token) {
-        localStorage.setItem("token", response.token);
-        
-        setTimeout(() => {
-          localStorage.removeItem("token");
-        }, 3600000);
+        sessionStorage.setItem("token", response.token);
       }
 
 

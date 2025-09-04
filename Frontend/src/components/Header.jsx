@@ -10,8 +10,8 @@ export default function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Verifica si hay token en localStorage al montar el componente
-    const token = localStorage.getItem("token");
+    // Verifica si hay token en sessionStorage (fallback a localStorage)
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
 
@@ -28,17 +28,17 @@ export default function Header() {
 
   return (
     <header className="w-full bg-[#4a6455] text-white shadow-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-between py-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between py-2">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <img
             src={Logo}
-            alt="Mercampo"
+            alt="Ruralket"
             className="h-12 drop-shadow-lg cursor-pointer"
             onClick={() => navigate("/")}
           />
           <h1
-            className="text-2xl font-bold drop-shadow-lg cursor-pointer"
+            className="text-2xl font-extrabold drop-shadow-lg cursor-pointer font-lato"
             onClick={() => navigate("/")}
           >
             Rural<span className="text-yellow-500">ket</span>
@@ -46,7 +46,7 @@ export default function Header() {
         </div>
 
         {/* Ubicación + buscador */}
-        <div className="flex-1 mx-12 flex items-center">
+        <div className="flex-1 mx-10 flex items-center">
           <span className="mr-4 text-sm text-gray-300 flex items-center gap-1">
             <MapPin size={18} /> Enviar a Villa María
           </span>

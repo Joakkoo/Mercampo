@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import RegisterForm from "../components/RegisterForm";
-import { registerUser } from "../services/authservice";
+import { registerUser } from "../services/authService";
 import useNotification from "../hooks/useNotification";
 import NotificationContainer from "../components/NotificationContainer";
 

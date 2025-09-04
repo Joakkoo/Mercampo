@@ -7,6 +7,10 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
+			lato: [
+				'Lato-black',
+				'sans-serif'
+			],
   			staatliches: [
   				'Staatliches',
   				'sans-serif'
@@ -18,7 +22,7 @@ module.exports = {
   		},
   		colors: {
   			primary: {
-  				DEFAULT: '#072E13',
+  				DEFAULT: '#4a6455',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			secondary: {

@@ -32,7 +32,7 @@ export default function ProductCarousel({ products }) {
   };
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto mt-5">
+    <div className="relative w-full max-w-7xl mx-auto mt-5 pl-10 pr-10">
       {/* Botón izquierdo */}
       <Button
         variant="ghost"
@@ -54,7 +54,7 @@ export default function ProductCarousel({ products }) {
           {products.map((product) => (
             <div
               key={product.id}
-              className="w-1/6 flex-shrink-0 p-2" // 1/6 = 6 cards visibles
+              className="w-1/6 flex-shrink-0 p-1" // 1/6 = 6 cards visibles
             >
               <Card className="shadow-lg rounded-2xl">
                 <CardContent className="p-2 flex flex-col items-center">

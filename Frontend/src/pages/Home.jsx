@@ -41,7 +41,7 @@ export default function Home() {
         <Header />
 
         <main className="max-w-7xl mx-auto px-6 py-10">
-          <h2 className="text-5xl font-extrabold mb-4 font-staatliches">
+          <h2 className="text-5xl font-extrabold mb-4 font-lato text-primary">
             Bienvenido a Rural<span className="text-secondary">ket</span>
           </h2>
           <p className="text-gray-600 text-lg font-semibold font-montserrat">
