@@ -259,3 +259,14 @@ model Review {
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 }
+
+// Catálogo de cultivos para seleccionar en publicaciones (uso/cultivo)
+model Crop {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  group     String?  // Grupo: Cereales, Legumbres, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
